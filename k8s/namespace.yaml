@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vllm-system
+  labels:
+    name: vllm-system
+    istio-injection: enabled
+spec:
+  finalizers:
+  - kubernetes

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vllm-config
+  namespace: vllm-system
+data:
+  # Llama 2 7B Chat model
+  model: "meta-llama/Llama-2-7b-chat-hf"
+  tensor_parallel_size: "1"
+  max_model_len: "4096"
+  max_num_batched_tokens: "8192"
+  max_num_seqs: "256"
+  
+  # Server configuration
+  host: "0.0.0.0"
+  port: "8000"
+  
+  # Llama 2 specific optimizations
+  enable_chunked_prefill: "true"
+  max_num_on_the_fly: "8"
+  
+  # OpenAI API compatibility
+  served_model_name: "llama-2-7b-chat"
+  
+  # GPU configuration for Llama 2 7B
+  gpu_memory_utilization: "0.90"
+  
+  # Logging
+  log_level: "info"
+  
+  # Chat template for Llama 2
+  chat_template: |
+    <s>[INST] <<SYS>>
+    You are a helpful, respectful and honest assistant.
+    <</SYS>>
+    
+    {{ user_message }} [/INST]

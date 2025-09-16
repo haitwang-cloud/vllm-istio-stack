@@ -1,0 +1,49 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: vllm
+  namespace: vllm-system
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - vllm-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /v1/
+    route:
+    - destination:
+        host: vllm.vllm-system.svc.cluster.local
+        port:
+          number: 8000
+    timeout: 300s
+    retries:
+      attempts: 3
+      perTryTimeout: 100s
+      retryOn: gateway-error,connect-failure,refused-stream
+  - match:
+    - uri:
+        prefix: /health
+    route:
+    - destination:
+        host: vllm.vllm-system.svc.cluster.local
+        port:
+          number: 8000
+    timeout: 10s
+  - match:
+    - uri:
+        prefix: /metrics
+    route:
+    - destination:
+        host: vllm.vllm-system.svc.cluster.local
+        port:
+          number: 8000
+    timeout: 30s
+  # Default route for other paths
+  - route:
+    - destination:
+        host: vllm.vllm-system.svc.cluster.local
+        port:
+          number: 8000
+    timeout: 300s

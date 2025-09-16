@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vllm-config
+  namespace: vllm-system
+data:
+  # Mixtral 8x7B Instruct model
+  model: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+  tensor_parallel_size: "2"  # Use 2 GPUs for better performance
+  max_model_len: "32768"  # Mixtral supports long context
+  max_num_batched_tokens: "32768"
+  max_num_seqs: "64"  # Lower due to larger model
+  
+  # Server configuration
+  host: "0.0.0.0"
+  port: "8000"
+  
+  # Mixtral specific optimizations
+  enable_chunked_prefill: "true"
+  max_num_on_the_fly: "4"
+  
+  # OpenAI API compatibility
+  served_model_name: "mixtral-8x7b-instruct"
+  
+  # GPU configuration for Mixtral 8x7B
+  gpu_memory_utilization: "0.95"
+  
+  # Quantization for memory efficiency (optional)
+  # quantization: "awq"
+  
+  # Logging
+  log_level: "info"
+  
+  # Generation parameters
+  default_temperature: "0.7"
+  default_top_p: "0.9"
+  default_max_tokens: "2048"

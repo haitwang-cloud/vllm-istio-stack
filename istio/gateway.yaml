@@ -1,0 +1,28 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: vllm-gateway
+  namespace: vllm-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+    # Uncomment for HTTPS
+    # tls:
+    #   httpsRedirect: true
+  # Uncomment for HTTPS
+  # - port:
+  #     number: 443
+  #     name: https
+  #     protocol: HTTPS
+  #   tls:
+  #     mode: SIMPLE
+  #     credentialName: vllm-tls-secret
+  #   hosts:
+  #   - "your-domain.com"

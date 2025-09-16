@@ -1,0 +1,37 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: vllm
+  namespace: vllm-system
+spec:
+  host: vllm.vllm-system.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN  # Options: ROUND_ROBIN, LEAST_CONN, RANDOM, PASSTHROUGH
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        keepAlive:
+          time: 7200s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        idleTimeout: 900s
+        h2UpgradePolicy: UPGRADE
+    outlierDetection:
+      consecutiveErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 50
+      splitExternalLocalOriginErrors: false
+  # Uncomment for mTLS
+  # portLevelSettings:
+  # - port:
+  #     number: 8000
+  #   tls:
+  #     mode: ISTIO_MUTUAL
