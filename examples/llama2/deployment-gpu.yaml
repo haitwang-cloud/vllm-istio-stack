@@ -1,0 +1,128 @@
+# GPU-enabled deployment for Llama 2 models
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  namespace: vllm-system
+  labels:
+    app: vllm
+    version: v1
+    model: llama2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: vllm
+        version: v1
+        model: llama2
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      nodeSelector:
+        accelerator: nvidia-tesla-k80  # Adjust based on your GPU nodes
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:latest
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        - name: MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: vllm-config
+              key: model
+        - name: TENSOR_PARALLEL_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: vllm-config
+              key: tensor_parallel_size
+        - name: MAX_MODEL_LEN
+          valueFrom:
+            configMapKeyRef:
+              name: vllm-config
+              key: max_model_len
+        - name: GPU_MEMORY_UTILIZATION
+          valueFrom:
+            configMapKeyRef:
+              name: vllm-config
+              key: gpu_memory_utilization
+        - name: SERVED_MODEL_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: vllm-config
+              key: served_model_name
+        command:
+        - python3
+        - -m
+        - vllm.entrypoints.openai.api_server
+        args:
+        - --model
+        - $(MODEL)
+        - --host
+        - "0.0.0.0"
+        - --port
+        - "8000"
+        - --tensor-parallel-size
+        - $(TENSOR_PARALLEL_SIZE)
+        - --max-model-len
+        - $(MAX_MODEL_LEN)
+        - --gpu-memory-utilization
+        - $(GPU_MEMORY_UTILIZATION)
+        - --served-model-name
+        - $(SERVED_MODEL_NAME)
+        - --enable-chunked-prefill
+        - --disable-log-requests
+        - --trust-remote-code
+        resources:
+          requests:
+            memory: "32Gi"
+            cpu: "8"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "48Gi"
+            cpu: "16"
+            nvidia.com/gpu: "1"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 120  # Llama 2 takes longer to load
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: model-cache
+          mountPath: /home/vllm/.cache
+        - name: shm
+          mountPath: /dev/shm
+      volumes:
+      - name: model-cache
+        emptyDir:
+          sizeLimit: "100Gi"  # Larger cache for Llama 2
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: "8Gi"

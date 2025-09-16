@@ -1,0 +1,20 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: vllm-mtls
+  namespace: vllm-system
+spec:
+  selector:
+    matchLabels:
+      app: vllm
+  mtls:
+    mode: PERMISSIVE  # Options: STRICT, PERMISSIVE, DISABLE
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: vllm-system
+spec:
+  mtls:
+    mode: PERMISSIVE

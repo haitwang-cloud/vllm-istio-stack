@@ -1,0 +1,41 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: vllm-authz
+  namespace: vllm-system
+spec:
+  selector:
+    matchLabels:
+      app: vllm
+  rules:
+  # Allow health checks
+  - to:
+    - operation:
+        paths: ["/health"]
+    when:
+    - key: source.ip
+      values: ["0.0.0.0/0"]
+  # Allow metrics collection
+  - to:
+    - operation:
+        paths: ["/metrics"]
+    when:
+    - key: source.namespace
+      values: ["istio-system", "monitoring", "vllm-system"]
+  # Allow API calls from specific sources
+  - to:
+    - operation:
+        paths: ["/v1/*"]
+        methods: ["POST", "GET"]
+    when:
+    - key: source.namespace
+      values: ["vllm-system", "default"]  # Add your allowed namespaces
+  # Uncomment to restrict by JWT claims
+  # - to:
+  #   - operation:
+  #       paths: ["/v1/*"]
+  #   when:
+  #   - key: request.auth.claims[iss]
+  #     values: ["your-issuer"]
+  #   - key: request.auth.claims[aud]
+  #     values: ["your-audience"]

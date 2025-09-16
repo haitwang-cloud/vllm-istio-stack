@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vllm-config
+  namespace: vllm-system
+data:
+  # Model configuration
+  model: "gpt2"  # Change this to your desired model
+  tensor_parallel_size: "1"
+  max_model_len: "4096"
+  max_num_batched_tokens: "8192"
+  max_num_seqs: "256"
+  
+  # Server configuration
+  host: "0.0.0.0"
+  port: "8000"
+  
+  # Performance tuning
+  enable_chunked_prefill: "true"
+  max_num_on_the_fly: "8"
+  
+  # OpenAI API compatibility
+  served_model_name: "gpt2"
+  
+  # GPU configuration (adjust based on your setup)
+  gpu_memory_utilization: "0.95"
+  
+  # Logging
+  log_level: "info"
